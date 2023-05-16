@@ -9,7 +9,7 @@ import webbrowser
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from ezdxf.addons import r12writer
-from polylabel import polylabel
+from polygon_labeling import polygon_labeling
 
 # Use Windows high DPI scaling
 if platform == 'win32':
@@ -28,18 +28,6 @@ class MenuBar(tk.Menu):
 
         file_menu = tk.Menu(self)
         file_menu.add_command(label="Exit", command=root.quit)
-
-        help_menu = tk.Menu(self)
-        help_menu.add_command(label="Support", command=lambda: webbrowser.open(r"https://github.com/Archer4499/Maximum-Inscribed-Circle"))
-        help_menu.add_command(label="About",
-                              command=lambda: messagebox.showinfo("About", "Reads data files containing polygons and outputs the co-ordinates and diameter "
-                                                                           "(and optionally points of the circle) of maximum inscribed circles to be "
-                                                                           "contained within the digitized polygons.\n\n"
-                                                                           "Read more at https://github.com/Archer4499/Maximum-Inscribed-Circle\n\n"
-                                                                           "This project is licensed under the MIT License."))
-
-        self.add_cascade(menu=file_menu, label="File")
-        self.add_cascade(menu=help_menu, label="Help")
 
         root.config(menu=self)
 
@@ -150,15 +138,15 @@ class Gui(tk.Tk):
         self.loadButton.grid(column=column, row=0, padx=5, pady=5)
         self.loadButton.focus_set()
 
-        ttk.Label(parentFrame, text="Number of polygons found:")\
-            .grid(column=column+1, row=0, sticky="E", padx=(5, 0), pady=0)
-        ttk.Label(parentFrame, textvariable=self.numPolygons)\
-            .grid(column=column+2, row=0, sticky="W", padx=(0, 5), pady=0)
+        # ttk.Label(parentFrame, text="Number of polygons found:")\
+        #     .grid(column=column+1, row=0, sticky="E", padx=(5, 0), pady=0)
+        # ttk.Label(parentFrame, textvariable=self.numPolygons)\
+        #     .grid(column=column+2, row=0, sticky="W", padx=(0, 5), pady=0)
 
 
         ttk.Label(parentFrame, text="Preview of polygons and output circles:", anchor="center")\
             .grid(column=column, columnspan=3, row=2, sticky="EW", padx=5, pady=0)
-        self.canvas = tk.Canvas(parentFrame, background="white")
+        self.canvas = tk.Canvas(parentFrame, background="light green")
         self.canvas.grid(column=column, columnspan=3, row=3, rowspan=27, sticky="NESW", padx=(10, 5), pady=(0, 10))
         self.canvas.bind("<Configure>", self.drawShapes)
 
@@ -169,18 +157,6 @@ class Gui(tk.Tk):
         for i, button in enumerate(self.dxfCheckButtons):
             button.grid(column=column+1, row=i+1, sticky="W", padx=5, pady=0)
 
-    
-
-        self.pointsNumCheckButton = NumEntry(4, 3, 9999, parentFrame, textvariable=self.outputPointsNum)
-        self.pointsNumCheckButton.grid(column=column, row=9, columnspan=2, sticky="W", padx=5, pady=0)
-
-        ttk.Label(parentFrame, text="Output Folder:")\
-            .grid(column=column, row=10, columnspan=2, sticky="W", padx=5, pady=(5, 0))
-        ttk.Entry(parentFrame, textvariable=self.outputFolder)\
-            .grid(column=column, row=11, columnspan=2, sticky="EW", padx=5, pady=0)
-
-        self.browseButton = ttk.Button(parentFrame, text="Browse", command=self.browse)
-        self.browseButton.grid(column=column, row=14, columnspan=2, padx=5, pady=(5, 0))
 
         self.saveButton = ttk.Button(parentFrame, text="Save", command=self.save)
         self.saveButton.grid(column=column, row=15, columnspan=2, padx=5, pady=(0, 5))
@@ -225,7 +201,7 @@ class Gui(tk.Tk):
             # TODO(Derek): polylabel sometimes infinite loops if bad data is given
             #               contained multiple polygons in one, with 0, 0 in between.
             # circle is formatted as [[x,y,z],radius]
-            circle = list(polylabel(polygon[0], precision=0.001, with_distance=True))
+            circle = list(polygon_labeling(polygon[0], precision=0.001, with_distance=True))
             if not circle[1]:
                 prettyPolygon = [[polygon[0][i][0], polygon[0][i][1], polygon[1][i]] for i in range(len(polygon[0]))]
                 messagebox.showerror(title="Error", message=f"Could not create circle from polygon:\n{prettyPolygon}")
@@ -730,30 +706,6 @@ class AskAuto(tk.Toplevel):
         self.focus_force()
         self.wait_window(self)
 
-    def body(self, master):
-        bodyFrame = ttk.Frame(master)
-        bodyFrame.grid(column=0, columnspan=4, row=0, padx=20, pady=20, sticky="NESW")
-        bodyFrame.columnconfigure(3, weight=1)
-
-        ttk.Label(bodyFrame, wraplength=400, text=f"{self.baseFileName}", font="-weight bold")\
-            .grid(column=0, columnspan=4, row=0, sticky="NESW")
-        ttk.Label(bodyFrame, wraplength=400, text="Is not in a recognised format.\nAttempt to parse automatically or manually specify columns?")\
-            .grid(column=0, columnspan=4, row=1, sticky="NESW")
-        ttk.Label(bodyFrame, wraplength=400, text="If you would like this format to be automatically processed, please report an issue to the")\
-            .grid(column=0, columnspan=4, row=2, sticky="NESW")
-
-        linkLabel = ttk.Label(bodyFrame, foreground="#0645AD", font="-underline 1", anchor="w",
-                              text=r"GitHub")
-        linkLabel.grid(column=0, row=3, sticky="NW")
-        linkLabel.bind("<Button-1>", lambda event: webbrowser.open(r"https://github.com/Archer4499/Maximum-Inscribed-Circle"))
-
-        ttk.Label(bodyFrame, anchor="w", text="page or email")\
-            .grid(column=1, row=3, sticky="NW")
-
-        emailLabel = ttk.Label(bodyFrame, foreground="#0645AD", font="-underline 1", anchor="w",
-                               text=r"king.dm49@gmail.com")
-        emailLabel.grid(column=2, row=3, sticky="NW")
-        emailLabel.bind("<Button-1>", lambda event: webbrowser.open(r"mailto:?to=king.dm49+mic@gmail.com&subject=Add%20support%20for%20new%20file%20format"))
 
     def buttonbox(self, master):
         autoButton = ttk.Button(master, text="Auto", command=self.auto, default=tk.ACTIVE)

@@ -55,9 +55,18 @@ int main()
     cin >> input_option;
     if(input_option == "file")
     {
-
+        std::ifstream in("/home/oleksandryemets/Documents/University/GeometryLabs/GeometryLab/points.csv");
+        int N;
+        in >> N;
+        
+        for(int i = 0; i < N; i++)
+        {
+            double x,y;
+            in >> x >> y;
+            points.push_back({x,y});
+        }
     }
-    if(input_option == "console")
+    else if(input_option == "console")
     {
         int N;
         std::cout << "Введіть кількість точок:\n";
